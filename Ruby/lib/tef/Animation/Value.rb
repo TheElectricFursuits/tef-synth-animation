@@ -31,6 +31,11 @@ module TEF
 			end
 
 			def generic_set(key, value)
+				if key == :from
+					self.from = value
+					return
+				end
+				
 				raise ArgumentError, 'Key does not exist!' unless PARAM_TYPES.include? key
 				raise ArgumentError, "Input must be numeric!" unless value.is_a? Numeric
 
