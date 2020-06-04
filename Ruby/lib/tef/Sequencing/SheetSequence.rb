@@ -4,7 +4,25 @@ require_relative 'Sheet.rb'
 
 module TEF
 	module Sequencing
+		# Sheet Sequence class.
+		#
+		# This is the main way for the user to specify an exact sequence of events
+		# to execute. It is construced with the help of a {Sheet}, which
+		# acts as specification for this Sheet Sequence.
+		#
+		# Think of the {Sheet} as being the script for a play or movie, while
+		# the {SheetSequence} has the job of actually performing everything.
 		class SheetSequence < BaseSequence
+
+			# Initialize a SheetSequence.
+			#
+			# This is mostly done via {Player#[]=} by passing a {Sheet}.
+			# However, a sequence can also be manually instantiated.
+			#
+			# After initialization, the sheet's {Sheet#setup_block} is called
+			# to fill this SheetSequence with actual content.
+			# The user may also call {#at} and {#after} manually to add additional
+			# events.
 			def initialize(offset, slope, **options)
 				super(offset, slope, **options);
 
@@ -55,6 +73,23 @@ module TEF
 				super();
 			end
 
+			# Insert an event or subsheet into the event list.
+			#
+			# This is the main way of adding events to this sequence.
+			# Each call to the function will insert a new event at the specified
+			# time, which will call the passed block.
+			# If, instead, a parameter called :sheet or :sequence is passed,
+			# instead the the passed sequence will be instantiated and
+			# added to the list of programs.
+			# Any further options are directly passed to the constructor
+			# of the class specified by the :sequence parameter
+			#
+			# If a block was passed, it will be instance_exec'd at the specified
+			# time.
+			#
+			# Note that any used or created resources shall be destroyed in
+			# the {Sheet#teardown} block. Sub-Sequences as well as notes
+			# played by {#play} are automatically torn down.
 			def at(time, **options, &block)
 				@latest_note_time = time;
 
@@ -82,10 +117,22 @@ module TEF
 				@notes.insert((i || -1), new_event);
 			end
 
+			# Similar to {#at}, but specifies time relative to the
+			# last event time.
+			# @see #at
 			def after(time, **options, &block)
 				at(time + (@latest_note_time || 0) , **options, &block);
 			end
 
+			# Play a music file, using `play`
+			#
+			# The PID of the music playing task is saved, and the process
+			# will be killed when this sheet is torn down. The user does not
+			# have to do anything else, but may choose to prematurely kill
+			# the playback by using {#kill}
+			#
+			# @param [String] music_piece Path of the file to play.
+			# @return [Numeric] The PID of the spawned process.
 			def play(music_piece, volume = 0.3)
 				play_pid = spawn(*%W{play -q --volume #{volume} #{music_piece}});
 
@@ -98,11 +145,12 @@ module TEF
 				play_pid
 			end
 
+			# Shorthand to kill
 			def kill(pid)
 				Process.kill('QUIT', pid);
 			end
 
-			def overload_append_events(collector)
+			private def overload_append_events(collector)
 				i = 0
 				loop do
 					next_program = @subprograms[i]

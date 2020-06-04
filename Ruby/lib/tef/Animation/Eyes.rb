@@ -1,6 +1,8 @@
 
 require_relative 'Animatable.rb'
 
+# TheElectricFursuits module.
+# @see https://github.com/TheElectricFursuits
 module TEF
 	module Animation
 		class Eye < Animatable

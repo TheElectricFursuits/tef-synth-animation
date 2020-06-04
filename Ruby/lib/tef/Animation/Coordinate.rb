@@ -4,7 +4,17 @@ $coordinate_def ||= {
 	y: 1,
 }
 
+# TheElectricFursuits module.
+# @see https://github.com/TheElectricFursuits
 module TEF
+	# Animation-Related Module
+	#
+	# This module wraps all classes related to TEF 'Synth'-Line animation.
+	# They are meant to provide an abstraction layer over the hardware-implemented
+	# animations that run on slave devices, such as the FurComs-Connected Synth Bit,
+	# and give the user full access to high-level functions such as configuring
+	# named parameters, setting up value smoothing and transitions, and
+	# creating and deleting objects.
 	module Animation
 		class Coordinate
 			$coordinate_def.each do |c, id|

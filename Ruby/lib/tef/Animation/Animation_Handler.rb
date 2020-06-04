@@ -3,11 +3,36 @@ require 'xasin_logger'
 
 require_relative 'Animatable.rb'
 
+# TheElectricFursuits module.
+# @see https://github.com/TheElectricFursuits
 module TEF
 	module Animation
+		# Animation object handler.
+		#
+		# This class is the handler for one coherent animation system.
+		# Its main purpose is to (de)register animatable objects, distributing
+		# IDs and handing out packed update messages onto a FurComs bus.
 		class Handler
 			include XasLogger::Mix
 
+			# Initialize a Handler.
+			#
+			# This will initialize a handler and connect it to the passed FurComs
+			# bus.
+			# The user may immediately start registering objects after creating
+			# this class, though if the FurComs bus is not connected yet this may
+			# cause very early messages to be lost!
+			#
+			# @param [FurComs::Base] furcoms_bus The FurComs Bus connecting
+			#  instance. Must support send_message(topic, data), nothing else.
+			#
+			# @note {#update_tick} MUST be called after performing any
+			#  changes, be it adding a new {Animatable} or changing values
+			#  of a known animatable. It is recommended to call this function
+			#  only after all changes for a given tick have been performed, so
+			#  that they can be sent over as a batch.
+			#  {Sequencing::Player#after_exec} can be used to register a callback
+			#  to call {#update_tick}.
 			def initialize(furcoms_bus)
 				@furcoms = furcoms_bus
 
@@ -20,6 +45,13 @@ module TEF
 				init_x_log('Animation Handler')
 			end
 
+			# Create a String key representation.
+			#
+			# This will take either a hash or a String,
+			# convert it to a standard String key representation, and then
+			# verify it for correctness.
+			# @param [String, Hash] key the key to clean up.
+			# @return [String] Cleaned string
 			def clean_key(key)
 				key = 'S%<S>dM%<M>d' % key if key.is_a? Hash
 
@@ -30,10 +62,20 @@ module TEF
 				key
 			end
 
+			# @return [Animatable] Returns the Animatable with matching key.
 			def [](key)
 				@active_animations[clean_key key]
 			end
 
+			# Register or replace a {Animatable}.
+			#
+			# This lets the user register a new {Animatable} object with given
+			# key, or replace or delete a pre-existing animation object.
+			#
+			# @param [String, Hash] key The key to write into.
+			# @param [Animatable, nil] Will delete any pre-existing animation, then
+			#  either replace it with the given {Animatable}, or, if nil was
+			#  given, will delete the animation entry.
 			def []=(key, new_obj)
 				@animation_mutex.synchronize {
 					key = clean_key key
@@ -42,18 +84,23 @@ module TEF
 
 					if new_obj.nil?
 						@pending_deletions[key] = true
+						@pending_creations.delete key
 
 					elsif new_obj.is_a? Animatable
 						new_obj.module_id = key
 
 						@active_animations[key] = new_obj
 						@pending_creations[key] = new_obj.creation_string
+						@pending_deletions.delete key
 					else
 						raise ArgumentError, 'New animation object is of invalid type'
 					end
 				}
 			end
 
+			# Internal function to join an Array of strings and send it onto
+			# the FurComs bus on a given topic.
+			# Useful to batch-send, which is a bit more efficient.
 			private def join_and_send(topic, data)
 				return if data.empty?
 
@@ -70,8 +117,12 @@ module TEF
 				@furcoms.send_message topic, out_str
 			end
 
-			# TODO Replace this with a time-synched system
-			# using the main synch time
+			# Internal function to send out death updates.
+		 	# This will send out to topic DTIME, updating the Animatable's
+			# death_time, as well as sending to DELETE for deleted animations.
+			#
+			# @todo Replace this with a time-synched system
+			# using the main synch time, rather than using relative time.
 			private def update_deaths
 				death_reconfigs = [];
 
@@ -99,6 +150,9 @@ module TEF
 				join_and_send('DELETE', deletions)
 			end
 
+			# Private function to send out creation strings.
+			# Will simply send a string per new object, as we do not often
+			# need to initialize objects.
 			private def update_creations
 				@pending_creations.each do |key, val|
 					@furcoms.send_message('NEW', val)
@@ -107,6 +161,15 @@ module TEF
 				@pending_creations = {}
 			end
 
+			# Internal function to optimize sending values.
+			#
+			# Updating values can be optimized in certain ways. The initial
+			# value specifier can be left out if the next value to update
+			# has an ID one after the former message.
+			#
+			# This can significantly reduce message length, for example after
+			# creating a new object and initializing it. Being able to leave out the
+			# Value ID saves about 10 bytes per value!
 			private def optimize_and_send(messages)
 				last_change = {}
 				out_str = '';
@@ -137,11 +200,13 @@ module TEF
 				@furcoms.send_message 'SET', out_str
 			end
 
+			# Internal function, will merely collect
+			# the change strings from all known animations.
 			private def update_values()
 				pending_changes = []
 
 				@animation_mutex.synchronize {
-					@active_animations.each do |key, anim|
+					@active_animations.each do |_, anim|
 						pending_changes += anim.get_set_strings
 					end
 				}
@@ -152,6 +217,8 @@ module TEF
 				optimize_and_send pending_changes
 			end
 
+			# Internal function, will collect all color change strings from
+			# active animations and send it over FurComs
 			private def update_colors
 				pending_changes = []
 
@@ -167,6 +234,17 @@ module TEF
 				join_and_send 'CSET', pending_changes
 			end
 
+			# Update tick.
+			#
+			# Calling this function will send all updates and changes over the
+			# FurComs bus. It is ensured that they occour in the following order:
+			#
+			# - All modules that have actively been deleted in Ruby will be
+			#   deleted.
+			# - Newly created and registered {Animatable}s will be created
+			#   on the animation slaves.
+			# - All {Value} changes of all {Animatable}s will be sent.
+			# - All {Color} changes will be sent.
 			def update_tick()
 				update_creations
 
