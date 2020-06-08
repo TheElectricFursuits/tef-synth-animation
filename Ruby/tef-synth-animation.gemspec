@@ -1,7 +1,7 @@
 
 Gem::Specification.new do |s|
 	s.name        = 'tef-animation'
-	s.version     = '0.1.0'
+	s.version     = '0.1.1'
 	s.date        = '2020-05-19'
 	s.summary     = 'TEF Animation and Sequencing code'
 	s.description = 'A Ruby gem to animate and sequence the "Synth"-Line TEF modules.'
