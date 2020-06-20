@@ -222,16 +222,28 @@ module TEF
 			private def update_colors
 				pending_changes = []
 
-				@animation_mutex.synchronize {
+				@animation_mutex.synchronize do
 					@active_animations.each do |key, anim|
 						pending_changes += anim.get_setc_strings
 					end
-				}
+				end
 
 				return if pending_changes.empty?
 				x_logd "Pending changes are #{pending_changes}"
 
 				join_and_send 'CSET', pending_changes
+			end
+
+			private def update_strings
+				@animation_mutex.synchronize do
+					@active_animations.values.each do |anim|
+						anim.get_setss_strings().each do |str|
+							puts "Sending string #{str}!"
+
+							@furcoms.send_message 'SSET', str
+						end
+					end
+				end
 			end
 
 			# Update tick.
@@ -246,12 +258,15 @@ module TEF
 			# - All {Value} changes of all {Animatable}s will be sent.
 			# - All {Color} changes will be sent.
 			def update_tick()
+				puts "Boop"
+				
 				update_creations
 
 				update_deaths
 
 				update_values
 				update_colors
+				update_strings
 			end
 		end
 	end

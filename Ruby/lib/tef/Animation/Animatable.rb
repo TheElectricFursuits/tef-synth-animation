@@ -149,6 +149,8 @@ module TEF
 				@animatable_colors = {}
 				@animatable_coordinates = {}
 
+				@animatable_pending_strings = [];
+
 				self.class.get_attr_list.each do |key, val|
 					@animatable_attributes[key] = Value.new(val)
 				end
@@ -245,6 +247,10 @@ module TEF
 				''
 			end
 
+			def send_string(str)
+				@animatable_pending_strings << str;
+			end
+
 			private def all_animatable_attributes
 				out =  @animatable_attributes.values
 				out += @animatable_coordinates.values.map(&:animatable_attributes)
@@ -336,6 +342,18 @@ module TEF
 				end
 
 				out_elements
+			end
+
+			def get_setss_strings()
+				return [] unless @module_id
+
+				out =  @animatable_pending_strings.map do |str|
+					"#{@module_id} #{str}"
+				end
+
+				@animatable_pending_strings.clear
+
+				return out;
 			end
 		end
 
