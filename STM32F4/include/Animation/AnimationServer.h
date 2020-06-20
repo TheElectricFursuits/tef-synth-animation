@@ -86,9 +86,12 @@ public:
 
 	void handle_set_command(const char *command);
 	void handle_color_set_command(const char *command);
+	void handle_string_set_command(const char *cmd);
 
 	void handle_delete_command(const char *command);
 	void handle_dtime_command(const char *command);
+
+	bool parse_command(const char *topic, const char *command);
 
 	static animation_global_id_t decode_value_tgt(const char *str);};
 

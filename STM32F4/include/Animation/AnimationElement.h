@@ -15,10 +15,16 @@
 #include <map>
 
 #ifndef ANIM_USE_CUSTOM_COORDS
+#define LED_COORD_COUNT 2
 struct led_coord_t {
 	float x;
 	float y;
 };
+#endif
+
+#ifndef ANIM_LED_COUNT
+#warning "Please define the animatable LED count!"
+#define ANIM_LED_COUNT 0
 #endif
 
 namespace Xasin {
@@ -61,6 +67,8 @@ public:
 	void set_color(uint8_t value, const char *command);
 	void set_color(uint8_t value, Color n_color);
 	void set_color_op(uint8_t val_num, animation_color_op op);
+
+	virtual void set_string(const char *str);
 
 	virtual void tick(float delta_t);
 

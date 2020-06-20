@@ -239,6 +239,20 @@ void AnimationServer::handle_color_set_command(const char *command) {
 	}
 }
 
+void AnimationServer::handle_string_set_command(const char *cmd) {
+	auto target = decode_value_tgt(cmd);
+	auto v_ptr = get_animation(target.ID);
+
+	if(v_ptr == nullptr)
+		return;
+
+	auto next_pos = strchr(cmd, ' ');
+	if(next_pos == nullptr || *next_pos == '\0')
+		v_ptr->set_string("");
+	else
+		v_ptr->set_string(next_pos+1);
+}
+
 void AnimationServer::handle_delete_command(const char *command) {
 	while(command != nullptr && *command != '\0') {
 		if(strncmp(command, "SET ", 4) == 0) {
@@ -277,6 +291,28 @@ void AnimationServer::handle_dtime_command(const char *command) {
 
 		command += 1;
 	}
+}
+
+bool AnimationServer::parse_command(const char *topic, const char *command) {
+	if(strcmp(topic, "SET") == 0) {
+		handle_set_command(command);
+	}
+	else if(strcmp(topic, "CSET") == 0) {
+		handle_color_set_command(command);
+	}
+	else if(strcmp(topic, "DELETE") == 0) {
+		handle_delete_command(command);
+	}
+	else if(strcmp(topic, "DTIME") == 0) {
+		handle_dtime_command(command);
+	}
+	else if(strcmp(topic, "SSET") == 0) {
+		handle_string_set_command(command);
+	}
+	else
+		return false;
+
+	return true;
 }
 
 } /* namespace Xasin */

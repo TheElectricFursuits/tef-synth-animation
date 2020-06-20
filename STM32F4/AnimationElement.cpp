@@ -186,6 +186,8 @@ void AnimationElement::set_color_op(uint8_t val_num, animation_color_op op) {
 	color_ops[val_num].to = ptr;
 }
 
+void AnimationElement::set_string(const char *str) {}
+
 void AnimationElement::tick(float delta_t) {
 }
 
