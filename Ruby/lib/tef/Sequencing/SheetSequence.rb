@@ -138,7 +138,7 @@ module TEF
 
 				Thread.new do
 					@active_music << play_pid
-					Process.wait(@active_music)
+					Process.wait(play_pid)
 					@active_music.delete play_pid
 				end
 
