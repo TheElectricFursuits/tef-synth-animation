@@ -46,9 +46,9 @@ struct animation_copy_op {
 	float pt2_speed;
 };
 struct animation_color_op {
-	Color * to;
-	Color target_color;
-	Color intermediate_color;
+	LED::Colour * to;
+	LED::Colour target_color;
+	LED::Colour intermediate_color;
 
 	float f1;
 	float f2;
@@ -94,7 +94,7 @@ public:
 
 	bool parse_command(const char *topic, const char *command);
 
-	static animation_global_id_t decode_value_tgt(const char *str);};
+	static animation_global_id_t decode_value_tgt(const char *str);
 
 };
 

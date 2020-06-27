@@ -64,9 +64,9 @@ public:
 	void set_flt(animation_value_id_t val_num, animation_global_id_t source);
 	void set_flt_op(animation_value_id_t val_num, animation_copy_op op);
 
-	virtual Color * get_color(uint8_t val_num);
+	virtual LED::Colour * get_color(uint8_t val_num);
 	void set_color(uint8_t value, const char *command);
-	void set_color(uint8_t value, Color n_color);
+	void set_color(uint8_t value, LED::Colour n_color);
 	void set_color_op(uint8_t val_num, animation_color_op op);
 
 	virtual void set_string(const char *str);

@@ -16,7 +16,7 @@ namespace Animation {
 
 class Box: public AnimationElement {
 public:
-	Layer &target;
+	LED::Layer &target;
 
 	led_coord_t x_coord;
 	led_coord_t y_coord;
@@ -25,12 +25,12 @@ public:
 	float rotation;
 	float up, down, left, right;
 
-	Color draw_color;
+	LED::Colour draw_color;
 
-	Box(AnimationServer &server, animation_id_t ID, Layer &tgt_layer, int z = 0);
+	Box(AnimationServer &server, animation_id_t ID, LED::Layer &tgt_layer, int z = 0);
 
 	float * get_flt(animation_value_id_t val);
-	Color * get_color(uint8_t val);
+	LED::Colour * get_color(uint8_t val);
 
 	void tick(float delta_t);
 };

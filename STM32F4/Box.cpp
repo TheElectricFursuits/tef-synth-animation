@@ -12,7 +12,7 @@
 namespace TEF {
 namespace Animation {
 
-Box::Box(AnimationServer &server, animation_id_t ID, Layer &tgt_layer, int z)
+Box::Box(AnimationServer &server, animation_id_t ID, LED::Layer &tgt_layer, int z)
 	: AnimationElement(server, ID, z), target(tgt_layer),
 	  x_coord(), y_coord(), center(),
 	  rotation(0), up(0), down(0), left(0), right(0),
@@ -51,7 +51,7 @@ float * Box::get_flt(animation_value_id_t val) {
 	}
 }
 
-Color * Box::get_color(uint8_t val) {
+LED::Colour * Box::get_color(uint8_t val) {
 	if(val == 0)
 		return &draw_color;
 

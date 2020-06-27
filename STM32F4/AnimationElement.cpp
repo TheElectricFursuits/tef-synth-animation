@@ -66,7 +66,7 @@ void AnimationElement::delete_copy_to(animation_value_id_t value) {
 float * AnimationElement::get_flt(animation_value_id_t val_num) {
 	return nullptr;
 }
-Color * AnimationElement::get_color(uint8_t val_num) {
+LED::Colour * AnimationElement::get_color(uint8_t val_num) {
 	return nullptr;
 }
 
@@ -168,7 +168,7 @@ void AnimationElement::set_color(uint8_t value, const char *command) {
 	NEXT_SPACE();
 	op->f2 = strtof(command, nullptr);
 }
-void AnimationElement::set_color(uint8_t value, Color n_color) {
+void AnimationElement::set_color(uint8_t value, LED::Colour n_color) {
 	auto ptr = get_color(value);
 	if(ptr == nullptr)
 		return;
