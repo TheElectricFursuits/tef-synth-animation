@@ -11,7 +11,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-namespace Xasin {
+namespace TEF {
+namespace Animation {
 
 AnimationServer::AnimationServer()
 	: animations(),
@@ -315,4 +316,5 @@ bool AnimationServer::parse_command(const char *topic, const char *command) {
 	return true;
 }
 
+}
 } /* namespace Xasin */

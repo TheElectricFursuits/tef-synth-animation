@@ -27,7 +27,8 @@ struct led_coord_t {
 #define ANIM_LED_COUNT 0
 #endif
 
-namespace Xasin {
+namespace TEF {
+namespace Animation {
 
 class AnimationElement {
 private:
@@ -76,6 +77,7 @@ public:
 	void relink();
 };
 
+}
 } /* namespace Xasin */
 
 #endif /* STM32F4_ANIMATION_ANIMATIONELEMENT_H_ */

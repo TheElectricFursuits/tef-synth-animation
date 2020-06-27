@@ -9,7 +9,7 @@
 
 #include <math.h>
 
-namespace Xasin {
+namespace TEF {
 namespace Animation {
 
 Box::Box(AnimationServer &server, animation_id_t ID, Layer &tgt_layer, int z)

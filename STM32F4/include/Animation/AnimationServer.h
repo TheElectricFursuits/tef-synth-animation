@@ -8,14 +8,15 @@
 #ifndef STM32F4_NEOCONTROLLER_ANIMATORSERVER_H_
 #define STM32F4_NEOCONTROLLER_ANIMATORSERVER_H_
 
-#include <NeoController/Color.h>
+#include <tef/led/Colour.h>
 
 #include <stdint.h>
 #include <vector>
 
 #include <cmsis_os.h>
 
-namespace Xasin {
+namespace TEF {
+namespace Animation {
 
 union animation_id_t {
 	struct {
@@ -95,6 +96,9 @@ public:
 
 	static animation_global_id_t decode_value_tgt(const char *str);};
 
+};
+
+}
 } /* namespace Xasin */
 
 #endif /* STM32F4_NEOCONTROLLER_ANIMATORSERVER_H_ */

@@ -13,7 +13,8 @@
 
 int VIEWER_animation_count = 0;
 
-namespace Xasin {
+namespace TEF {
+namespace Animation {
 
 led_coord_t const * AnimationElement::led_coordinates = nullptr;
 
@@ -236,4 +237,5 @@ void AnimationElement::relink() {
 	}
 }
 
+}
 } /* namespace Xasin */

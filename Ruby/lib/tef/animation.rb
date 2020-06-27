@@ -1,6 +1,7 @@
 
 require_relative 'Animation/Animation_Handler.rb'
 require_relative 'Animation/Eyes.rb'
+require_relative 'Animation/String.rb'
 
 require_relative 'ParameterStack/Stack.rb'
 
