@@ -24,15 +24,15 @@ module TEF
 			# The user may also call {#at} and {#after} manually to add additional
 			# events.
 			def initialize(offset, slope, **options)
-				super(offset, slope, **options);
-
 				raise ArgumentError, 'Sheet must be supplied!' unless options[:sheet]
 
 				@sheet = options[:sheet]
 
 				if @sheet.tempo
-					@slope *= @sheet.tempo / (60 * (options[:top_slope] || 1))
+					slope *= (@sheet.tempo / (60.to_f * (options[:top_slope] || 1)))
 				end
+
+				super(offset, slope, **options);
 
 				@start_time = @sheet.start_time
 				@end_time = @sheet.end_time
@@ -91,6 +91,8 @@ module TEF
 			# the {Sheet#teardown} block. Sub-Sequences as well as notes
 			# played by {#play} are automatically torn down.
 			def at(time, **options, &block)
+				time = time.to_f.round(3);
+
 				@latest_note_time = time;
 
 				options[:sequence] = SheetSequence if options[:sheet]

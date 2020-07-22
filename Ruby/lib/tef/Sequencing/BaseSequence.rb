@@ -50,7 +50,10 @@ module TEF
 				@end_time   ||= options[:end_time];
 
 				@offset = offset;
-				@slope  = slope;
+				@slope  = slope.round(6);
+				# Explanation: For some bizarre reason, rounding is necessary
+				# to avoid a glitch in the timing math. 6 digits of precision
+				# should be precise enough anyways.
 
 				@state = :uninitialized
 

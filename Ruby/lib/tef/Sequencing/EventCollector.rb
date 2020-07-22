@@ -41,8 +41,9 @@ module TEF
 			# This should only be done via {EventCollector#offset_collector}!
 			def initialize(parent, total_offset, total_slope)
 				@parent = parent
+
 				@total_offset = total_offset
-				@total_slope  = total_slope
+				@total_slope  = total_slope.to_f
 			end
 
 			# @param [Time, nil] global_time Time to convert
@@ -50,7 +51,7 @@ module TEF
 			def convert_to_local(global_time)
 				return nil if global_time.nil?
 
-				(global_time - @total_offset) * @total_slope
+				((global_time - @total_offset) * @total_slope).round(3)
 			end
 
 			# @param [Numeric, nil] local_time Time (abstract) to convert back
@@ -59,7 +60,7 @@ module TEF
 			def convert_to_global(local_time)
 				return nil if local_time.nil?
 
-				@total_offset + (local_time.to_f / @total_slope)
+				@total_offset + (local_time.to_f.round(3) / @total_slope)
 			end
 
 			# (see EventCollector#start_time)
@@ -133,8 +134,11 @@ module TEF
 			# and set the event list to [event], else append the event
 			# to the event list.
 			def add_event(event)
+				event = event.clone
+
 				return if event[:time] <= @start_time
 				return if (!@event_time.nil?) && (event[:time] > @event_time)
+				return unless event[:code].is_a? Proc
 
 				if (!@event_time.nil?) && (event[:time] == @event_time)
 					@current_events << event
