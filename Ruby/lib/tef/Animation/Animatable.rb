@@ -208,6 +208,11 @@ module TEF
 				self.death_time = Time.at(0)
 			end
 
+			def is_dead?
+				return false if @death_time.nil?
+				return @death_time < Time.now();
+			end
+
 			# Quickly configure this object.
 			#
 			# This is a convenience function to very quickly and easily
@@ -227,6 +232,11 @@ module TEF
 				raise ArgumentError, 'Config must be a hash!' unless h.is_a? Hash
 
 				h.each do |key, data|
+					if(key == :die_after)
+						die_in(data.to_f);
+						next;
+					end
+
 					value = 	@animatable_attributes[key] ||
 								@animatable_colors[key] ||
 								@animatable_coordinates[key]

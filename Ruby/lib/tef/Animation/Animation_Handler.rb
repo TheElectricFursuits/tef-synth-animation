@@ -62,6 +62,26 @@ module TEF
 				key
 			end
 
+			private def internal_set_object(key, new_obj)
+				key = clean_key key
+
+				@active_animations[key]&.module_id = nil;
+
+				if new_obj.nil?
+					@pending_deletions[key] = true
+					@pending_creations.delete key
+
+				elsif new_obj.is_a? Animatable
+					new_obj.module_id = key
+
+					@active_animations[key] = new_obj
+					@pending_creations[key] = new_obj.creation_string
+					@pending_deletions.delete key
+				else
+					raise ArgumentError, 'New animation object is of invalid type'
+				end
+			end
+
 			# @return [Animatable] Returns the Animatable with matching key.
 			def [](key)
 				@active_animations[clean_key key]
@@ -77,25 +97,28 @@ module TEF
 			#  either replace it with the given {Animatable}, or, if nil was
 			#  given, will delete the animation entry.
 			def []=(key, new_obj)
-				@animation_mutex.synchronize {
-					key = clean_key key
+				@animation_mutex.synchronize do
+					internal_set_object(key, new_obj)
+				end
+			end
 
-					@active_animations[key]&.module_id = nil;
+			def append_to_set(new_obj, set_no = 200)
+				@animation_mutex.synchronize do
+					start_no = { S: set_no, M: 0 };
 
-					if new_obj.nil?
-						@pending_deletions[key] = true
-						@pending_creations.delete key
-
-					elsif new_obj.is_a? Animatable
-						new_obj.module_id = key
-
-						@active_animations[key] = new_obj
-						@pending_creations[key] = new_obj.creation_string
-						@pending_deletions.delete key
-					else
-						raise ArgumentError, 'New animation object is of invalid type'
+					until(@active_animations[clean_key start_no].nil? ||
+							@active_animations[clean_key start_no].is_dead?) do
+						start_no[:M] += 1
 					end
-				}
+
+					if(start_no[:M] >= 255)
+						raise ArgumentError, 'No more space for new animations!'
+					end
+
+					internal_set_object(start_no, new_obj)
+				end
+
+				new_obj
 			end
 
 			# Internal function to join an Array of strings and send it onto
@@ -125,10 +148,11 @@ module TEF
 			# using the main synch time, rather than using relative time.
 			private def update_deaths
 				death_reconfigs = [];
+				deletions = []
 
-				@animation_mutex.synchronize {
+				@animation_mutex.synchronize do
 					@active_animations.each do |key, animation|
-						if (!animation.death_time.nil?) && animation.death_time < Time.now()
+						if animation.is_dead?
 							@pending_deletions[key] = :silent
 						end
 
@@ -137,14 +161,14 @@ module TEF
 
 						death_reconfigs << new_death
 					end
-				}
 
-				deletions = []
-				@pending_deletions.each do |key, val|
-					deletions << "#{key};" unless val == :silent
-					@active_animations.delete key
+					@pending_deletions.each do |key, val|
+						deletions << "#{key};" unless val == :silent
+						@active_animations.delete key
+					end
+					@pending_deletions = {}
+
 				end
-				@pending_deletions = {}
 
 				join_and_send('DTIME', death_reconfigs)
 				join_and_send('DELETE', deletions)
@@ -258,8 +282,6 @@ module TEF
 			# - All {Value} changes of all {Animatable}s will be sent.
 			# - All {Color} changes will be sent.
 			def update_tick()
-				puts "Boop"
-				
 				update_creations
 
 				update_deaths
