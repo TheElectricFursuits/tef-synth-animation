@@ -10,3 +10,5 @@ require_relative 'ProgramSelection/SequenceCollection.rb'
 require_relative 'ProgramSelection/SoundCollection.rb'
 
 require_relative 'Sequencing/SequencePlayer.rb'
+
+require_relative 'Sequencing/AudacityLabelReader.rb'
