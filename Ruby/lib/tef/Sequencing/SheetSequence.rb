@@ -65,7 +65,9 @@ module TEF
 
 				@subprograms.each(&:teardown)
 
-				@active_music.each { |pid| Process.kill('QUIT', pid); }
+				@active_music.each do |pid|
+					self.kill pid
+				end
 
 				@subprograms = nil;
 				@notes = nil;
@@ -150,6 +152,8 @@ module TEF
 			# Shorthand to kill
 			def kill(pid)
 				Process.kill('QUIT', pid);
+			rescue Errno::ESRCH
+				return false
 			end
 
 			private def overload_append_events(collector)
