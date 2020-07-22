@@ -49,7 +49,7 @@ module TEF
 				super();
 
 				if block = @sheet.setup_block
-					instance_exec(@opts_hash[:sheet_options], &block)
+					instance_exec(@opts_hash, &block)
 				end
 
 				return unless @end_time.nil?
@@ -105,6 +105,10 @@ module TEF
 
 					prog = prog.new(time, options[:slope], **options)
 
+					if e_time = options[:end_time]
+						prog.parent_end_time = e_time;
+					end
+
 					i = @subprograms.bsearch_index { |s| s.parent_start_time > prog.parent_start_time }
 					@subprograms.insert((i || -1), prog);
 
@@ -158,11 +162,16 @@ module TEF
 
 			private def overload_append_events(collector)
 				i = 0
+
 				loop do
 					next_program = @subprograms[i]
 					break if next_program.nil?
-					break if collector.event_time &&
-								(collector.event_time < next_program.parent_start_time)
+					if(collector.event_time &&
+						(collector.event_time < next_program.parent_start_time))
+
+						i += 1;
+						next
+					end
 
 					next_program.append_events collector
 

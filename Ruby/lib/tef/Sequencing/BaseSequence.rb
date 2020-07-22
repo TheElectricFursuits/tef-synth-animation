@@ -64,6 +64,15 @@ module TEF
 				@offset + @start_time / @slope
 			end
 
+			def parent_end_time=(new_time)
+				if(new_time.nil?)
+					@end_time = nil;
+					return;
+				end
+
+				@end_time = (new_time - @offset) * @slope;
+			end
+
 			def setup()
 				raise 'Program had to be uninitialized!' unless @state == :uninitialized
 				@state = :running

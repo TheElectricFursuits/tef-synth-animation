@@ -54,6 +54,8 @@ module TEF
 
 				@setup_block = nil;
 				@teardown_block = nil;
+
+				yield(self) if(block_given?)
 			end
 
 			# Configure a block to call when setting up the {SheetSequence}.
