@@ -33,7 +33,7 @@ module TEF
 			# purposes. Can be:
 			# - :uninitialized (right after construction)
 			# - :running (after having called setup())
-			# - :torn_down (after teardown() was called)
+			# - :idle (after teardown() was called)
 			attr_reader :state
 
 			# Initialize a BaseSequence.
@@ -63,6 +63,11 @@ module TEF
 			def parent_start_time
 				@offset + @start_time / @slope
 			end
+			def parent_end_time
+				return nil if @end_time.nil?
+
+				@offset + @end_time / @slope
+			end
 
 			def parent_end_time=(new_time)
 				if(new_time.nil?)
@@ -74,15 +79,13 @@ module TEF
 			end
 
 			def setup()
-				raise 'Program had to be uninitialized!' unless @state == :uninitialized
+				return unless @state == :idle
 				@state = :running
 			end
 
 			def teardown()
 				return unless @state == :running
-				@state = :torn_down
-
-				@opts_hash = nil;
+				@state = :idle
 			end
 
 			# Look for the next possible event that this sequence wants to
@@ -95,29 +98,33 @@ module TEF
 			# @note When using BaseSequence as base class, the user
 			#  shall overload {#overload_append_events} rather than this function!
 			def append_events(collector)
+				return if @state == :uninitialized
+
 				local_collector = collector.offset_collector(@offset, @slope);
 
+				# Return if the collector has events before our start time
 				return if local_collector.has_events? &&
 							 local_collector.event_time < @start_time
-				return if @state == :torn_down
 
-				if @state == :uninitialized
+				if !@end_time.nil?
+					if @state == :running
+	 					local_collector.add_event({
+	 						time: [@end_time, local_collector.start_time + 0.01].max,
+	 						code: proc { self.teardown() }
+	 					})
+					end
+
+					return if local_collector.start_time >= @end_time
+ 				end
+
+				if @state == :idle
 					local_collector.add_event({
 						time: [@start_time, local_collector.start_time + 0.01].max,
-						code: proc { self.setup() }
+						code: proc { self.setup(); puts "Block #{self} set up!" }
 					});
 				end
 
-				if @state == :running
-					overload_append_events(local_collector)
-				end
-
-				if !@end_time.nil?
-					local_collector.add_event({
-						time: @end_time,
-						code: proc { self.teardown() }
-					})
-				end
+				overload_append_events(local_collector)
 			end
 
 			def overload_append_events(_collector) end

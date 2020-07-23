@@ -25,6 +25,11 @@ module TEF
 			#  execution!
 			attr_accessor :end_time
 
+			# If set non-nil, determines the timespan after which a given
+			# sequence will repeat itself. Does not influence start_time and
+			# end_time.
+			attr_accessor :repeat_time
+
 			# @return [Numeric, nil] Tempo of the sheet. Defines the execution
 			#  speed in BPM. If left nil, the execution speed of the parent
 			#  sheet is used.
@@ -38,6 +43,7 @@ module TEF
 			# @see SheetSequence#at
 			# @see SheetSequence#after
 			# @see SheetSequence#play
+			attr_reader :fill_block
 			attr_reader :setup_block
 			attr_reader :teardown_block
 
@@ -47,11 +53,13 @@ module TEF
 			# {#start_time}, {#end_time} and by supplying at least a
 			# {#sequence}
 			def initialize()
-				@start_time = 0;
+				@start_time = nil;
 				@end_time = nil;
+				@repeat_time = nil;
 
 				@tempo = nil
 
+				@fill_block = nil;
 				@setup_block = nil;
 				@teardown_block = nil;
 
@@ -66,8 +74,12 @@ module TEF
 			# @see SheetSequence#at
 			# @see SheetSequence#after
 			# @see SheetSequence#play
-			def sequence(&block)
+			def setup(&block)
 				@setup_block = block;
+			end
+
+			def notes(&block)
+				@fill_block = block;
 			end
 
 			# Configure the block to call when the {SheetSequence} is about to

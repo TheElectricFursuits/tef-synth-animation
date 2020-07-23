@@ -108,7 +108,9 @@ module TEF
 				loop do
 					@sequenceMutex.synchronize do
 						@retryCollecting = false
-						@activeSequences.delete_if { |k, seq| seq.state == :torn_down }
+						@activeSequences.delete_if do |k, seq|
+							seq.parent_end_time >= Time.now();
+						end
 						@activeSequences.each { |k, seq| seq.append_events @collector }
 					end
 

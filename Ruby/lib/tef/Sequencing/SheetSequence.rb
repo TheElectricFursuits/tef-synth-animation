@@ -13,7 +13,6 @@ module TEF
 		# Think of the {Sheet} as being the script for a play or movie, while
 		# the {SheetSequence} has the job of actually performing everything.
 		class SheetSequence < BaseSequence
-
 			# Initialize a SheetSequence.
 			#
 			# This is mostly done via {Player#[]=} by passing a {Sheet}.
@@ -34,26 +33,33 @@ module TEF
 
 				super(offset, slope, **options);
 
-				@start_time = @sheet.start_time
-				@end_time = @sheet.end_time
-
 				@notes = []
 				@latest_note_time = nil;
 
 				@subprograms = []
-
 				@active_music = []
+
+				@start_time = @sheet.start_time
+				@end_time = @sheet.end_time
+
+				if block = @sheet.fill_block
+					instance_exec(@opts_hash, &block)
+
+					@start_time ||= @notes[0]&.dig(:time) || 0;
+					@end_time	||= @notes[-1]&.dig(:time) || 0;
+
+					@state = :idle;
+				end
 			end
 
 			def setup()
+				return unless @state == :idle
+
 				super();
 
 				if block = @sheet.setup_block
 					instance_exec(@opts_hash, &block)
 				end
-
-				return unless @end_time.nil?
-				@end_time = (@notes[-1]&.dig(:time) || 0) + 0.01
 			end
 
 			def teardown()
@@ -68,9 +74,6 @@ module TEF
 				@active_music.each do |pid|
 					self.kill pid
 				end
-
-				@subprograms = nil;
-				@notes = nil;
 
 				super();
 			end
@@ -93,7 +96,13 @@ module TEF
 			# the {Sheet#teardown} block. Sub-Sequences as well as notes
 			# played by {#play} are automatically torn down.
 			def at(time, **options, &block)
-				time = time.to_f.round(3);
+				time = time.to_f
+
+				if repeat_time = @sheet.repeat_time
+					time = time % repeat_time
+				end
+
+				time = time.round(3);
 
 				@latest_note_time = time;
 
@@ -163,22 +172,29 @@ module TEF
 			private def overload_append_events(collector)
 				i = 0
 
-				loop do
-					next_program = @subprograms[i]
-					break if next_program.nil?
-					if(collector.event_time &&
-						(collector.event_time < next_program.parent_start_time))
+				if(@sheet.repeat_time)
+					repeat_cycle = (collector.start_time / @sheet.repeat_time).floor
+					repeat_shift_time = repeat_cycle * @sheet.repeat_time
 
-						i += 1;
+					# This will wrap around and thusly implement the repeating nature
+					# of this sequence
+					collector = collector.offset_collector(repeat_shift_time, 1);
+				end
+
+				@subprograms.each do |program|
+					if(collector.event_time &&
+						(collector.event_time < program.parent_start_time))
 						next
 					end
 
-					next_program.append_events collector
+					program.append_events collector
+				end
 
-					if next_program.state == :torn_down
-						@subprograms.delete_at i
-					else
-						i += 1
+				return if @notes.empty?
+
+				if(@sheet.repeat_time)
+					if(collector.start_time >= @notes[-1][:time])
+						collector = collector.offset_collector(@sheet.repeat_time, 1);
 					end
 				end
 
@@ -187,13 +203,9 @@ module TEF
 
 				note_time = @notes[i][:time]
 
-				next_note = @notes[i];
-				loop do
-					collector.add_event next_note;
-
-					next_note = @notes[i += 1]
-					break unless next_note
-					break if next_note[:time] != note_time
+				until (note = @notes[i])&.dig(:time) != note_time
+					i += 1;
+					collector.add_event note
 				end
 			end
 		end
