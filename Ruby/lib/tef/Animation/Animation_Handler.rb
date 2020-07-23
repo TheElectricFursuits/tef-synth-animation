@@ -262,8 +262,6 @@ module TEF
 				@animation_mutex.synchronize do
 					@active_animations.values.each do |anim|
 						anim.get_setss_strings().each do |str|
-							puts "Sending string #{str}!"
-
 							@furcoms.send_message 'SSET', str
 						end
 					end
