@@ -109,7 +109,12 @@ module TEF
 					@sequenceMutex.synchronize do
 						@retryCollecting = false
 						@activeSequences.delete_if do |k, seq|
-							seq.parent_end_time >= Time.now();
+							if(seq.parent_end_time >= Time.now())
+								seq.destroy!()
+								true
+							else
+								false
+							end
 						end
 						@activeSequences.each { |k, seq| seq.append_events @collector }
 					end

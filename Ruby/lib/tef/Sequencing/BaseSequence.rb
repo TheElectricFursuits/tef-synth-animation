@@ -128,6 +128,10 @@ module TEF
 			end
 
 			def overload_append_events(_collector) end
+
+			def destroy!()
+				teardown() if @state == :running
+			end
 		end
 	end
 end

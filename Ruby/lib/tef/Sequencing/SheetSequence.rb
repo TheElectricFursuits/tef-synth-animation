@@ -78,6 +78,13 @@ module TEF
 				super();
 			end
 
+			def destroy!()
+				super();
+
+				@notes = nil;
+				@subprograms.each(&:destroy!)
+			end
+
 			# Insert an event or subsheet into the event list.
 			#
 			# This is the main way of adding events to this sequence.
