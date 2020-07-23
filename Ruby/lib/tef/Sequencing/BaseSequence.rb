@@ -120,7 +120,7 @@ module TEF
 				if @state == :idle
 					local_collector.add_event({
 						time: [@start_time, local_collector.start_time + 0.01].max,
-						code: proc { self.setup(); puts "Block #{self} set up!" }
+						code: proc { self.setup() }
 					});
 				end
 
